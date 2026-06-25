@@ -496,7 +496,7 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer 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' 
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
