@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Amber Café – Premium Asztalfoglalás</title>
+  
+  <!-- EmailJS CDN (Valós email küldéshez) -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <style>
+    /* --- DESIGN SYSTEM & THEMES --- */
+    :root {
+      --bg: #070a12; --text: #eef2ff; --muted: #a6b2d3; --line: rgba(255,255,255,.12);
+      --card: rgba(255,255,255,.03); --card-solid: #1a1c23; 
+      --accent: #ffd166; --accentText: #241a00;
+      --ok: #2de2a6; --danger: #ff4d6d; --warning: #ffb703;
+      --input-bg: rgba(0,0,0,.20);
+    }
+    body.light-mode {
+      --bg: #f8fafc; --text: #0f172a; --muted: #64748b; --line: rgba(0,0,0,.12);
+      --card: #ffffff; --card-solid: #f1f5f9; 
+      --accent: #f59e0b; --accentText: #ffffff;
+      --input-bg: #ffffff;
+    }
+
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body { margin: 0; font-size: 16px; line-height: 1.6; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+    a { color: inherit; text-decoration: none; cursor: pointer; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 22px; }
+
+    /* --- HEADER & NAV --- */
+    header { border-bottom: 1px solid var(--line); background: transparent; backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10; }
+    .nav { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand strong { letter-spacing: .2px; font-size: 20px; color: var(--accent); }
+    .menu { display: flex; gap: 24px; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .menu a { transition: 0.2s; }
+    .menu a:hover, .menu a.active { color: var(--accent); transform: scale(1.05); }
+    .toolbar { display: flex; gap: 10px; align-items: center; }
+    .icon-btn { background: var(--card); border: 1px solid var(--line); color: var(--text); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+    .icon-btn:hover { background: var(--line); }
+
+    /* --- ANIMÁCIÓK (Micro-interactions) --- */
+    @keyframes fadeScaleUp {
+      from { opacity: 0; transform: translateY(15px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .view-section { animation: fadeScaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+    /* --- GOMBOK --- */
+    .btn { background: var(--accent); color: var(--accentText); padding: 10px 14px; border-radius: 10px; font-weight: 900; border: 0; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 209, 102, 0.3); }
+    .btn-small { padding: 6px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--text); }
+
+    main { padding: 30px 0 60px; }
+    
+    /* --- LAYOUTS --- */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; transition: background 0.3s; }
+    h1 { font-size: 32px; line-height: 1.2; margin: 0 0 10px; }
+    h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* --- FORM --- */
+    form { display: grid; gap: 14px; margin-top: 20px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text); outline: none; transition: 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.1); }
+    
+    /* Extrák / Előrendelés */
+    .extra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+    .extra-item { display: flex; align-items: center; gap: 8px; font-size: 13px; background: var(--input-bg); padding: 8px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; transition: 0.2s; }
+    .extra-item:hover { border-color: var(--accent); }
+    .extra-item input { width: 16px; height: 16px; cursor: pointer; margin: 0; }
+
+    /* --- ASZTALTÉRKÉP --- */
+    .map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .table-seat { padding: 15px; border: 2px solid var(--line); border-radius: 12px; text-align: center; cursor: pointer; font-weight: bold; color: var(--muted); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .table-seat:hover:not(.taken) { border-color: var(--accent); color: var(--text); transform: scale(1.03); }
+    .table-seat.selected { background: var(--accent); color: var(--accentText); border-color: var(--accent); transform: scale(1.05); }
+    
+    /* Foglalt asztal stílus */
+    .table-seat.taken { background: rgba(255, 77, 109, 0.1); border-color: var(--danger); color: var(--danger); opacity: 0.6; cursor: not-allowed; text-decoration: line-through; }
+
+    /* --- ADMIN --- */
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .admin-tools { display: flex; gap: 10px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 14px 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+    .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .status-uj { background: rgba(255, 183, 3, 0.2); color: var(--warning); }
+    .status-ok { background: rgba(45, 226, 166, 0.2); color: var(--ok); }
+    .vip-badge { background: #ffd166; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 6px; }
+
+    /* --- TOAST ÉRTESÍTÉS --- */
+    #toast { position: fixed; bottom: -100px; right: 20px; background: var(--ok); color: #000; font-weight: bold; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; }
+    #toast.show { bottom: 20px; }
+    .d-none { display: none !important; }
+
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .row, .extra-grid, .admin-tools { grid-template-columns: 1fr; flex-direction: column; } }
+  </style>
+</head>
+
+<div id="chat-widget" style="position:fixed; bottom:20px; left:20px; z-index:1000;">
+  <button onclick="toggleChat()" class="btn" style="border-radius:50%; width:60px; height:60px; font-size:24px;">☕</button>
+  <div id="chat-window" class="card d-none" style="position:absolute; bottom:70px; left:0; width:300px; height:400px; display:flex; flex-direction:column;">
+    <div id="chat-messages" style="flex-grow:1; overflow-y:auto; margin-bottom:10px; font-size:14px;">
+      <p>Szia! Miben segíthetek az Amber Caféban?</p>
+    </div>
+    <input type="text" id="chat-input" placeholder="Írj valamit...">
+    <button onclick="sendMessage()" class="btn btn-small" style="margin-top:5px;">Küldés</button>
+  </div>
+</div>
+
+<body>
+
+<header>
+  <div class="container nav">
+    <div class="brand"><strong>Amber Café</strong></div>
+    <nav class="menu">
+      <a onclick="switchTab('booking')" id="nav-booking" class="active">Foglalás</a>
+      <a onclick="switchTab('contact')" id="nav-contact">Kapcsolat</a>
+      <a onclick="switchTab('admin-login')" id="nav-admin">Admin</a>
+    </nav>
+    <div class="toolbar">
+      <button class="icon-btn" onclick="toggleTheme()" title="Téma váltása">🌓</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  
+  <!-- VIEW: FOGLALÁS -->
+  <section id="view-booking" class="view-section">
+    <div class="grid">
+      <!-- Űrlap -->
+      <div class="card">
+        <h2>1. Lépés</h2>
+        <h1>Mikor jönnétek?</h1>
+        <p>Válaszd ki a dátumot és az időpontot, hogy lássad a szabad asztalokat.</p>
+        
+        <form id="bookingForm">
+          <div class="row">
+            <div>
+              <label>Dátum</label>
+              <input id="date" type="date" required onchange="checkAvailability()" />
+            </div>
+            <div>
+              <label>Időpont</label>
+              <select id="time" required onchange="checkAvailability()">
+                <option value="" disabled selected>Válassz...</option>
+                <option>08:00</option><option>10:00</option><option>12:00</option>
+                <option>14:00</option><option>16:00</option><option>18:00</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Név</label>
+              <input id="name" type="text" placeholder="Pl. Kiss Anna" required />
+            </div>
+            <div>
+              <label>Email</label>
+              <input id="email" type="email" placeholder="anna@email.hu" required />
+            </div>
+          </div>
+
+          <!-- Előrendelés Szekció -->
+          <div>
+            <label>Extrák bekészítése (Opcionális)</label>
+            <div class="extra-grid">
+              <label class="extra-item"><input type="checkbox" name="extra" value="Sós karamellás sajttorta"> Sós karamellás sajttorta</label>
+              <label class="extra-item"><input type="checkbox" name="extra" value="Dupla Espresso"> Dupla Espresso</label>
+              <label class="extra-item"><input type="checkbox" name="extra" value="Pisztáciás Croissant"> Pisztáciás Croissant</label>
+              <label class="extra-item"><input type="checkbox" name="extra" value="Matcha Latte"> Matcha Latte</label>
+            </div>
+          </div>
+
+          <div>
+            <label>Megjegyzés</label>
+            <textarea id="note" placeholder="Bármilyen egyedi kérés..."></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end; margin-top: 10px;">
+            <button class="btn" type="submit">Foglalás elküldése</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Térkép -->
+      <div class="card">
+        <h2>2. Lépés</h2>
+        <h1>Válassz asztalt</h1>
+        <p>A pirossal jelölt asztalok a kiválasztott időpontban már foglaltak.</p>
+        
+        <div class="map-grid" id="mapGrid">
+          <div class="table-seat" data-table="Ablak (2 fő)" onclick="selectTable(this)">Ablak 1<br><small>2 fő</small></div>
+          <div class="table-seat" data-table="Ablak (4 fő)" onclick="selectTable(this)">Ablak 2<br><small>4 fő</small></div>
+          <div class="table-seat" data-table="Sarok (2 fő)" onclick="selectTable(this)">Sarok<br><small>2 fő</small></div>
+          <div class="table-seat" data-table="Közép (4 fő)" onclick="selectTable(this)">Közép 1<br><small>4 fő</small></div>
+          <div class="table-seat" data-table="Közép (6 fő)" onclick="selectTable(this)">Közép 2<br><small>6 fő</small></div>
+          <div class="table-seat" data-table="Pult (2 fő)" onclick="selectTable(this)">Pult<br><small>2 fő</small></div>
+        </div>
+        <input type="hidden" id="selectedTable" required>
+        <p id="tableError" style="color: var(--danger); font-size: 13px; margin-top: 15px; display: none;">Kérlek válassz egy szabad asztalt a térképről!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW: KAPCSOLAT -->
+  <section id="view-contact" class="view-section d-none">
+    <div class="card grid">
+      <div>
+        <h2>Kapcsolat</h2>
+        <h1>Találj meg minket</h1>
+        <p><strong>Cím:</strong> 3525 Miskolc, Kávézó utca 1.</p>
+        <p><strong>Email:</strong> hello@ambercafe.hu</p>
+      </div>
+      <div>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d42857.94050873836!2d20.739702553070685!3d48.10347715424855!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47409e86e11516fd%3A0xc61f364020a59573!2sMiskolc!5e0!3m2!1shu!2shu!4v1717420000000!5m2!1shu!2shu" height="250" style="width:100%; border-radius:12px; border:none;" loading="lazy"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW: ADMIN LOGIN -->
+  <section id="view-admin-login" class="view-section d-none" style="max-width: 400px; margin: 0 auto;">
+    <div class="card" style="text-align: center;">
+      <h2>Rendszergazda</h2>
+      <h1>Bejelentkezés</h1>
+      <p style="margin-bottom: 20px;"><small>Jelszó: admin</small></p>
+      <form id="loginForm">
+        <input type="password" id="adminPass" placeholder="Jelszó..." required />
+        <button class="btn" type="submit">Belépés</button>
+        <p id="loginError" style="color: var(--danger); display: none; font-size:12px;">Helytelen jelszó!</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- VIEW: ADMIN DASHBOARD -->
+  <section id="view-admin-dash" class="view-section d-none">
+    <div class="card">
+      <div class="admin-header">
+        <div>
+          <h2>Üzleti Rendszer</h2>
+          <h1>Admin Dashboard</h1>
+        </div>
+      </div>
+
+      <div class="admin-tools">
+        <input type="text" id="searchInput" placeholder="Keresés név/email alapján..." onkeyup="renderAdminTable()" style="flex-grow: 1;">
+        <select id="filterStatus" onchange="renderAdminTable()">
+          <option value="all">Minden státusz</option>
+          <option value="Új">Csak Új</option>
+          <option value="Jóváhagyva">Jóváhagyva</option>
+        </select>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Dátum & Idő</th>
+              <th>Asztal</th>
+              <th>Vendég</th>
+              <th>Extrák & Megjegyzés</th>
+              <th>Státusz</th>
+              <th>Műveletek</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast"><span id="toastMsg">Sikeres művelet!</span></div>
+
+<script>
+  // --- EMAILJS INICIALIZÁLÁS (Opcionális) ---
+  // Ha van saját EmailJS fiókod, itt adhatod meg a kulcsot:
+  (function() {
+      try { emailjs.init("TE_EMAILJS_PUBLIC_KEY_IDE"); } catch(e) {}
+  })();
+
+  // --- ADATBÁZIS & TÉMA ---
+  let bookings = JSON.parse(localStorage.getItem('amber_bookings_v2')) || [];
+  
+  function saveBookings() {
+    localStorage.setItem('amber_bookings_v2', JSON.stringify(bookings));
+    if(sessionStorage.getItem('amber_admin_logged_in') === 'true') renderAdminTable();
+  }
+
+  if(localStorage.getItem('amber_theme') === 'light') document.body.classList.add('light-mode');
+  function toggleTheme() {
+    document.body.classList.toggle('light-mode');
+    localStorage.setItem('amber_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+  }
+
+  // --- NAVIGÁCIÓ ---
+  function switchTab(tabId) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
+    document.querySelectorAll('.menu a').forEach(el => el.classList.remove('active'));
+    
+    if (tabId === 'admin') {
+      if (sessionStorage.getItem('amber_admin_logged_in') === 'true') {
+        document.getElementById('view-admin-dash').classList.remove('d-none');
+        document.getElementById('nav-admin').classList.add('active');
+        renderAdminTable();
+      } else {
+        document.getElementById('view-admin-login').classList.remove('d-none');
+        document.getElementById('nav-admin').classList.add('active');
+      }
+    } else {
+      document.getElementById('view-' + tabId).classList.remove('d-none');
+      if(document.getElementById('nav-' + tabId)) document.getElementById('nav-' + tabId).classList.add('active');
+    }
+  }
+
+  // --- OKOS FOGLALÁS LOGIKA (Túlfoglalás gátló) ---
+  document.getElementById('date').min = new Date().toISOString().split("T")[0];
+
+  function checkAvailability() {
+    const selectedDate = document.getElementById('date').value;
+    const selectedTime = document.getElementById('time').value;
+    
+    // Alaphelyzetbe állítjuk az asztalokat
+    document.querySelectorAll('.table-seat').forEach(seat => {
+      seat.classList.remove('taken', 'selected');
+    });
+    document.getElementById('selectedTable').value = '';
+
+    if (!selectedDate || !selectedTime) return;
+
+    // Megkeressük a foglalt asztalokat az adott időpontban
+    const takenTables = bookings.filter(b => b.date === selectedDate && b.time === selectedTime).map(b => b.table);
+    
+    document.querySelectorAll('.table-seat').forEach(seat => {
+      if (takenTables.includes(seat.getAttribute('data-table'))) {
+        seat.classList.add('taken');
+      }
+    });
+  }
+
+  function selectTable(el) {
+    if (el.classList.contains('taken')) return; // Ha foglalt, nem lehet rákattintani
+    document.querySelectorAll('.table-seat').forEach(div => div.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selectedTable').value = el.getAttribute('data-table');
+    document.getElementById('tableError').style.display = 'none';
+  }
+
+  document.getElementById('bookingForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const selectedTable = document.getElementById('selectedTable').value;
+    
+    if(!selectedTable) {
+      document.getElementById('tableError').style.display = 'block';
+      return;
+    }
+
+    // Extrák kigyűjtése
+    const extras = Array.from(document.querySelectorAll('input[name="extra"]:checked')).map(cb => cb.value);
+
+    const newBooking = {
+      id: Date.now(),
+      date: document.getElementById('date').value,
+      time: document.getElementById('time').value,
+      table: selectedTable,
+      name: document.getElementById('name').value,
+      email: document.getElementById('email').value,
+      extras: extras,
+      note: document.getElementById('note').value,
+      status: 'Új'
+    };
+
+    bookings.push(newBooking);
+    saveBookings();
+
+    // Szimulált vagy valós email küldés
+    /* 
+    // Élesítéshez vedd ki a kommentből, ha beállítottad az EmailJS-t
+    emailjs.send("TE_SERVICE_ID", "TE_TEMPLATE_ID", {
+      to_name: newBooking.name,
+      to_email: newBooking.email,
+      date: newBooking.date,
+      time: newBooking.time
+    });
+    */
+
+    showToast('Foglalás sikeres! Várjuk szeretettel.');
+    document.getElementById('bookingForm').reset();
+    checkAvailability(); // Térkép frissítése (azonnal piros lesz a lefoglalt asztal)
+  });
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMsg').innerText = msg;
+    toast.classList.add('show');
+    setTimeout(() => { toast.classList.remove('show'); }, 4000);
+  }
+
+  // --- ADMIN LOGIKA & VIP HŰSÉGPROGRAM ---
+  document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (document.getElementById('adminPass').value === 'admin') {
+      sessionStorage.setItem('amber_admin_logged_in', 'true');
+      document.getElementById('adminPass').value = '';
+      switchTab('admin');
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  });
+
+  function renderAdminTable() {
+    const tbody = document.getElementById('adminTableBody');
+    tbody.innerHTML = '';
+    
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const filterStat = document.getElementById('filterStatus').value;
+
+    // Hűségprogram: Kiszámoljuk, hányszor foglalt egy email cím
+    const emailCounts = {};
+    bookings.forEach(b => { emailCounts[b.email] = (emailCounts[b.email] || 0) + 1; });
+
+    let filtered = bookings.filter(b => {
+      const matchSearch = b.name.toLowerCase().includes(searchTerm) || b.email.toLowerCase().includes(searchTerm);
+      const matchStatus = filterStat === 'all' || b.status === filterStat;
+      return matchSearch && matchStatus;
+    });
+
+    filtered.sort((a,b) => new Date(b.date) - new Date(a.date)); // Legújabb elöl
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted);">Nincs találat.</td></tr>';
+      return;
+    }
+
+    filtered.forEach(b => {
+      const tr = document.createElement('tr');
+      const statusClass = b.status === 'Jóváhagyva' ? 'status-ok' : 'status-uj';
+      const isVIP = emailCounts[b.email] >= 3 ? '<span class="vip-badge" title="Több mint 3 foglalás">⭐ VIP</span>' : '';
+      const extrasText = b.extras && b.extras.length > 0 ? `<br><small style="color:var(--accent)">Extrák: ${b.extras.join(', ')}</small>` : '';
+
+      tr.innerHTML = `
+        <td><strong>${b.date}</strong><br><span style="color:var(--muted)">${b.time}</span></td>
+        <td>${b.table}</td>
+        <td><strong>${b.name}</strong> ${isVIP}<br><small style="color:var(--muted)">${b.email}</small></td>
+        <td><small style="color:var(--muted)">${b.note || 'Nincs'}</small>${extrasText}</td>
+        <td><span class="status ${statusClass}">${b.status}</span></td>
+        <td>
+          <button class="btn btn-small btn-outline" onclick="toggleStatus(${b.id})">Jóváhagy</button>
+          <button class="btn btn-small btn-danger" onclick="deleteBooking(${b.id})">Töröl</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function deleteBooking(id) {
+    if(confirm('Biztosan törlöd ezt a foglalást?')) {
+      bookings = bookings.filter(b => b.id !== id);
+      saveBookings();
+    }
+  }
+
+  function toggleStatus(id) {
+    const index = bookings.findIndex(b => b.id === id);
+    if(index > -1) {
+      bookings[index].status = bookings[index].status === 'Új' ? 'Jóváhagyva' : 'Új';
+      saveBookings();
+    }
+  }
+
+    function toggleChat() {
+    document.getElementById('chat-window').classList.toggle('d-none');
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const userMsg = input.value;
+    
+    if(!userMsg) return;
+
+    // Vendég üzenete megjelenítése
+    chatMessages.innerHTML += `<p><b>Te:</b> ${userMsg}</p>`;
+    input.value = '';
+
+    // ChatGPT API hívása (Backend-en keresztül biztonságos!)
+    // Itt egy példa hívás – ehhez kell egy saját kis API végpontod (Node.js/Vercel)
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer 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' 
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {"role": "system", "content": "Te egy kedves pincér vagy az Amber Caféban, Miskolcon."},
+          {"role": "user", "content": userMsg}
+        ]
+      })
+    });
+    
+    const data = await response.json();
+    const botMsg = data.choices[0].message.content;
+    chatMessages.innerHTML += `<p><b>Amber Bot:</b> ${botMsg}</p>`;
+  }
+</script>
+
+</body>
+</html>
